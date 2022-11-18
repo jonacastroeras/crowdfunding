@@ -3,10 +3,11 @@ import Card from 'react-bootstrap/Card';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import {Link} from "react-router-dom";
-import {useEffect, useState} from "react";
-import {db} from "../../config/firebase"
-import {collection, getDocs} from "firebase/firestore";
+import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { db } from "../../config/firebase"
+import { collection, getDocs } from "firebase/firestore";
+import axios from 'axios';
 
 const list = [
     {
@@ -31,14 +32,22 @@ function HomePage() {
     useEffect(() => {
         async function fetchPost() {
 
-            await getDocs(collection(db, "histories"))
-                .then((querySnapshot) => {
-                    console.log(querySnapshot.docs)
-                    const newData = querySnapshot.docs
-                        .map((doc) => ({...doc.data(), id: doc.id}));
-                    setStoriesList(newData);
-                    console.log(newData);
-                })
+            // await getDocs(collection(db, "histories"))
+            //     .then((querySnapshot) => {
+            //         console.log(querySnapshot.docs)
+            //         const newData = querySnapshot.docs
+            //             .map((doc) => ({...doc.data(), id: doc.id}));
+            //         setStoriesList(newData);
+            //         console.log(newData);
+            //     })
+            const results = await axios.get("http://localhost:8000/api/v1/Project/", {
+                auth: {
+                    username: "jaime",
+                    password: "joalcaerJACE"
+                }
+            })
+            setStoriesList(results.data)
+
 
         }
 
@@ -51,11 +60,11 @@ function HomePage() {
                     return (
 
                         <Col key={index}>
-                            <Card style={{width: '18rem'}}>
+                            <Card style={{ width: '18rem' }}>
                                 <Card.Img variant="top"
-                                          src={element.image}/>
+                                    src={element.image} />
                                 <Card.Body>
-                                    <Card.Title>{element.title}</Card.Title>
+                                    <Card.Title>{element.name}</Card.Title>
                                     <Card.Text>
                                         {element.description}
                                     </Card.Text>
