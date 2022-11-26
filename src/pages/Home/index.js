@@ -3,7 +3,7 @@ import Card from 'react-bootstrap/Card';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { db } from "../../config/firebase"
 import { collection, getDocs } from "firebase/firestore";
@@ -29,6 +29,16 @@ const list = [
 
 function HomePage() {
     const [storiesList, setStoriesList] = useState([])
+    const [token, setToken] = useState("")
+    const navigate = useNavigate()
+
+    async function tokenRefresh() {
+        const refreshToken = localStorage.getItem("refresh")
+        const newToken = await axios.post("http://localhost:8000/api/token/refresh/", { refresh: refreshToken })
+        setToken(newToken.data.access)
+        localStorage.setItem("access", newToken.data.access)
+        return newToken
+    }
     useEffect(() => {
         async function fetchPost() {
 
@@ -40,19 +50,32 @@ function HomePage() {
             //         setStoriesList(newData);
             //         console.log(newData);
             //     })
-            const results = await axios.get("http://localhost:8000/api/v1/Project/", {
-                auth: {
-                    username: "jaime",
-                    password: "joalcaerJACE"
+            const access_token = localStorage.getItem("access")
+            const refresh_token = localStorage.getItem("refresh")
+            try {
+                const results = await axios.get("http://localhost:8000/api/v1/Project/", {
+                    headers: {
+                        Authorization: `Bearer ${access_token}`,
+                    }
+                })
+                setStoriesList(results.data)
+            } catch (error) {
+                console.log(error.response.status)
+                if (error.response.status === 401) {
+                    await tokenRefresh()
+                } else {
+                    navigate("/login")
                 }
-            })
-            setStoriesList(results.data)
+
+            }
+
+
 
 
         }
 
         fetchPost()
-    }, [])
+    }, [token])
     return (
         <Container>
             <Row>
